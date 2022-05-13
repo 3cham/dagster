@@ -741,7 +741,9 @@ def _validate_resource_reqs_for_asset_group(
         resource_keys: Set[str] = set()
         for op_def in asset_def.node_def.iterate_solid_defs():
             resource_keys.update(set(op_def.required_resource_keys or {}))
-        missing_resource_keys = list(set(resource_keys) - present_resource_keys)
+        missing_resource_keys = list(
+            set(resource_keys) - present_resource_keys - asset_def.resource_defs.keys()
+        )
         if missing_resource_keys:
             raise DagsterInvalidDefinitionError(
                 f"AssetGroup is missing required resource keys for asset '{asset_def.op.name}'. Missing resource keys: {missing_resource_keys}"

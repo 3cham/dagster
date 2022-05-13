@@ -740,3 +740,21 @@ def test_to_source_assets():
         SourceAsset(AssetKey(["my_asset_name"])),
         SourceAsset(AssetKey(["my_other_asset"])),
     ]
+
+
+def test_build_job_resource_defs_on_asset():
+    @resource
+    def the_resource():
+        pass
+
+    @asset(required_resource_keys={"bar"}, resource_defs={"foo": the_resource})
+    def the_asset():
+        pass
+
+    @asset(resource_defs={"foo": the_resource})
+    def other_asset():
+        pass
+
+    group = AssetGroup([the_asset, other_asset], resource_defs={"bar": the_resource})
+    the_job = group.build_job("some_name")
+    assert the_job.execute_in_process().success

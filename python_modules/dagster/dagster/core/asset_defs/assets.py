@@ -2,7 +2,13 @@ import warnings
 from typing import AbstractSet, Dict, Iterable, Mapping, Optional, Sequence, Set, cast
 
 import dagster._check as check
-from dagster.core.definitions import GraphDefinition, NodeDefinition, NodeHandle, OpDefinition
+from dagster.core.definitions import (
+    GraphDefinition,
+    NodeDefinition,
+    NodeHandle,
+    OpDefinition,
+    ResourceDefinition,
+)
 from dagster.core.definitions.events import AssetKey
 from dagster.core.definitions.partition import PartitionsDefinition
 from dagster.utils.backcompat import ExperimentalWarning, experimental
@@ -20,6 +26,7 @@ class AssetsDefinition:
         partitions_def: Optional[PartitionsDefinition] = None,
         partition_mappings: Optional[Mapping[AssetKey, PartitionMapping]] = None,
         asset_deps: Optional[Mapping[AssetKey, AbstractSet[AssetKey]]] = None,
+        resource_defs: Optional[Mapping[str, ResourceDefinition]] = None,
         # if adding new fields, make sure to handle them in the with_replaced_asset_keys method
     ):
         self._node_def = node_def
@@ -52,6 +59,7 @@ class AssetsDefinition:
             f"asset_deps keys: {set(self._asset_deps.keys())} \n"
             f"expected keys: {all_asset_keys}",
         )
+        self._resource_defs = check.opt_mapping_param(resource_defs, "resource_defs")
 
     def __call__(self, *args, **kwargs):
         return self._node_def(*args, **kwargs)
@@ -146,6 +154,10 @@ class AssetsDefinition:
         )
 
         return next(iter(self._asset_keys_by_output_name.values()))
+
+    @property
+    def resource_defs(self) -> Mapping[str, ResourceDefinition]:
+        return self._resource_defs
 
     @property
     def asset_keys(self) -> AbstractSet[AssetKey]:
