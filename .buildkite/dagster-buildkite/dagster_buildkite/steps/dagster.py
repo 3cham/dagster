@@ -23,7 +23,11 @@ from ..utils import (
 )
 from .docs import build_docs_steps
 from .helm import helm_steps
-from .test_images import core_test_image_depends_fn, publish_test_images, test_image_depends_fn
+from .test_images import (
+    build_publish_test_image_steps,
+    core_test_image_depends_fn,
+    test_image_depends_fn,
+)
 
 GIT_REPO_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..")
 
@@ -32,7 +36,7 @@ branch_name = safe_getenv("BUILDKITE_BRANCH")
 
 def build_dagster_steps() -> List[CommandStep]:
     steps = []
-    steps += publish_test_images()
+    steps += build_publish_test_image_steps()
 
     # Other linters are run in per-package environments because they rely on the dependencies of the
     # target. `black`, `isort`, and `check-manifest` are run for the whole repo at once.
@@ -552,10 +556,7 @@ DAGSTER_PACKAGES_WITH_CUSTOM_TESTS: List[PackageBuildSpec] = [
         ".buildkite/dagster-buildkite",
         run_pytest=False,
     ),
-    PackageBuildSpec(
-        "scripts",
-        run_pytest=False
-    ),
+    PackageBuildSpec("scripts", run_pytest=False),
 ]
 
 

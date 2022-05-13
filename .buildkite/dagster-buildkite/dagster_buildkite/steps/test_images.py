@@ -1,20 +1,21 @@
 from typing import List
+
 from ..defines import TOX_MAP, SupportedPython
 from ..images.versions import TEST_IMAGE_BUILDER_VERSION, UNIT_IMAGE_VERSION
 from ..step_builder import StepBuilder
-from ..utils import get_python_versions_for_branch
+from ..utils import get_python_versions_for_branch, CommandStep
 
 
-def publish_test_images():
+def build_publish_test_image_steps() -> List[CommandStep]:
     """This set of tasks builds and pushes Docker images, which are used by the dagster-airflow and
     the dagster-k8s tests
     """
-    tests = []
+    steps = []
     for version in get_python_versions_for_branch(
         pr_versions=[SupportedPython.V3_8, SupportedPython.V3_9]
     ):
         key = _test_image_step(version)
-        tests.append(
+        steps.append(
             StepBuilder(f":docker: test-image {version}", key=key)
             # these run commands are coupled to the way the test-image-builder is built
             # see python_modules/automation/automation/docker/images/buildkite-test-image-builder
@@ -54,7 +55,7 @@ def publish_test_images():
         )
 
         key = _core_test_image_step(version)
-        tests.append(
+        steps.append(
             StepBuilder(f":docker: test-image-core {version}", key=key)
             # these run commands are coupled to the way the test-image-builder is built
             # see python_modules/automation/automation/docker/images/buildkite-test-image-builder
@@ -88,7 +89,7 @@ def publish_test_images():
             )
             .build()
         )
-    return tests
+    return steps
 
 
 def _test_image_step(version: str) -> str:
