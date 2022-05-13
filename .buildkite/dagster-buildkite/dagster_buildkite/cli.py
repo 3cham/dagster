@@ -4,7 +4,7 @@ from typing import List
 from .defines import DO_COVERAGE
 from .steps.dagit import build_dagit_steps
 from .steps.dagster import build_coverage_step, build_dagster_steps
-from .steps.integration import integration_steps
+from .steps.integration import build_integration_steps
 from .steps.trigger import build_trigger_step
 from .steps.wait import wait_step
 from .utils import BuildkiteStep, buildkite_yaml_for_steps, is_pr_and_dagit_only, is_release_branch, safe_getenv
@@ -67,5 +67,5 @@ def dagster() -> None:
 
 
 def integration() -> None:
-    buildkite_yaml = buildkite_yaml_for_steps(integration_steps())
+    buildkite_yaml = buildkite_yaml_for_steps(build_integration_steps())
     print(buildkite_yaml)  # pylint: disable=print-call
