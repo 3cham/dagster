@@ -552,6 +552,10 @@ DAGSTER_PACKAGES_WITH_CUSTOM_TESTS: List[PackageBuildSpec] = [
         ".buildkite/dagster-buildkite",
         run_pytest=False,
     ),
+    PackageBuildSpec(
+        "scripts",
+        run_pytest=False
+    ),
 ]
 
 
