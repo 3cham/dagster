@@ -5,7 +5,6 @@ from typing import List
 from ..defines import (
     DEFAULT_PYTHON_VERSION,
     GCP_CREDS_LOCAL_FILE,
-    TOX_MAP,
     ExamplePythons,
     SupportedPython,
 )
@@ -14,9 +13,7 @@ from ..package_build_spec import PackageBuildSpec
 from ..step_builder import StepBuilder
 from ..utils import (
     CommandStep,
-    check_for_release,
     connect_sibling_docker_container,
-    get_python_versions_for_branch,
     is_release_branch,
     network_buildkite_container,
     safe_getenv,
@@ -50,8 +47,6 @@ def build_dagster_steps() -> List[CommandStep]:
     for m in DAGSTER_PACKAGES_WITH_CUSTOM_TESTS + DAGSTER_PACKAGES_WITH_STANDARD_STEPS:
         steps += m.build_tox_steps()
 
-    # https://github.com/dagster-io/dagster/issues/2785
-    steps += build_pipenv_smoke_steps()
     steps += build_docs_steps()
     steps += build_helm_steps()
     steps += build_sql_schema_check_steps()
@@ -588,28 +583,6 @@ DAGSTER_PACKAGES_WITH_STANDARD_STEPS = [
         for pkg in _get_uncustomized_pkgs("examples")
     ],
 ]
-
-
-def build_pipenv_smoke_steps() -> List[CommandStep]:
-    is_release = check_for_release()
-    if is_release:
-        return []
-
-    # tempoarily pinned due to issue with 2021.11.5, see https://github.com/dagster-io/dagster/issues/5565
-    smoke_test_steps = [
-        "pushd /workdir/python_modules",
-        "pip install pipenv==2021.5.29",
-        "pipenv install",
-    ]
-
-    # See: https://github.com/dagster-io/dagster/issues/2079
-    return [
-        StepBuilder(f"pipenv smoke tests {TOX_MAP[version]}")
-        .run(*smoke_test_steps)
-        .on_unit_image(version)
-        .build()
-        for version in get_python_versions_for_branch()
-    ]
 
 
 def build_coverage_step() -> CommandStep:
