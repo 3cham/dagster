@@ -6,6 +6,7 @@ from .steps.mypy import build_mypy_step
 from .steps.pylint import build_pylint_step
 from .utils import get_python_versions_for_branch
 
+
 class PackageBuildSpec(
     NamedTuple(
         "_PackageBuildSpec",

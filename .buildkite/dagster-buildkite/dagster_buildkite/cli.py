@@ -7,7 +7,13 @@ from .steps.dagster import build_coverage_step, build_dagster_steps
 from .steps.integration import build_integration_steps
 from .steps.trigger import build_trigger_step
 from .steps.wait import build_wait_step
-from .utils import BuildkiteStep, buildkite_yaml_for_steps, is_pr_and_dagit_only, is_release_branch, safe_getenv
+from .utils import (
+    BuildkiteStep,
+    buildkite_yaml_for_steps,
+    is_pr_and_dagit_only,
+    is_release_branch,
+    safe_getenv,
+)
 
 CLI_HELP = """This CLI is used for generating Buildkite YAML.
 """

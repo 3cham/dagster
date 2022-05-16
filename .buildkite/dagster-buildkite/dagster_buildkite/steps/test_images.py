@@ -3,7 +3,7 @@ from typing import List
 from ..defines import TOX_MAP, SupportedPython
 from ..images.versions import TEST_IMAGE_BUILDER_VERSION, UNIT_IMAGE_VERSION
 from ..step_builder import StepBuilder
-from ..utils import get_python_versions_for_branch, CommandStep
+from ..utils import CommandStep, get_python_versions_for_branch
 
 
 def build_publish_test_image_steps() -> List[CommandStep]:

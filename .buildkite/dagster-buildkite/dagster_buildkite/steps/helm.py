@@ -6,6 +6,7 @@ from ..package_build_spec import PackageBuildSpec
 from ..step_builder import StepBuilder
 from ..utils import CommandStep
 
+
 def build_helm_steps() -> List[CommandStep]:
     steps = []
     steps += _build_lint_steps()
@@ -19,6 +20,7 @@ def build_helm_steps() -> List[CommandStep]:
 
     return steps
 
+
 def _build_lint_steps() -> List[CommandStep]:
     return [
         StepBuilder(":helm: :yaml: :lint-roller:")
@@ -28,7 +30,6 @@ def _build_lint_steps() -> List[CommandStep]:
         )
         .on_integration_image(SupportedPython.V3_8)
         .build(),
-
         StepBuilder(":helm: dagster-json-schema")
         .run(
             "pip install -e helm/dagster/schema",
@@ -37,7 +38,6 @@ def _build_lint_steps() -> List[CommandStep]:
         )
         .on_integration_image(SupportedPython.V3_8)
         .build(),
-
         StepBuilder(":helm: dagster :lint-roller:")
         .run(
             "helm lint helm/dagster --with-subcharts --strict",
@@ -45,7 +45,6 @@ def _build_lint_steps() -> List[CommandStep]:
         .on_integration_image(SupportedPython.V3_8)
         .with_retry(2)
         .build(),
-
         StepBuilder(":helm: dagster dependency build")
         .run(
             "helm repo add bitnami https://charts.bitnami.com/bitnami",

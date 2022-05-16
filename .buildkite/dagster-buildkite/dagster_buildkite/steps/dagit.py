@@ -1,8 +1,8 @@
 from typing import List
 
 from ..defines import SupportedPython
-from ..utils import CommandStep
 from ..step_builder import StepBuilder
+from ..utils import CommandStep
 
 
 def build_dagit_steps() -> List[CommandStep]:
