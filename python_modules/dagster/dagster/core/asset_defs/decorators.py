@@ -18,17 +18,17 @@ import dagster._check as check
 from dagster.builtins import Nothing
 from dagster.config import Field
 from dagster.core.decorator_utils import get_function_params, get_valid_name_permutations
-from dagster.utils import merge_dicts
 from dagster.core.definitions.decorators.op_decorator import _Op
 from dagster.core.definitions.events import AssetKey
 from dagster.core.definitions.input import In
-from dagster.core.definitions.resource_definition import ResourceDefinition
 from dagster.core.definitions.output import Out
 from dagster.core.definitions.partition import PartitionsDefinition
+from dagster.core.definitions.resource_definition import ResourceDefinition
 from dagster.core.definitions.utils import NoValueSentinel
 from dagster.core.errors import DagsterInvalidDefinitionError
 from dagster.core.types.dagster_type import DagsterType
 from dagster.seven import funcsigs
+from dagster.utils import merge_dicts
 from dagster.utils.backcompat import ExperimentalWarning, experimental_decorator
 
 from .asset_in import AssetIn
