@@ -4,7 +4,7 @@ import packaging.version
 import requests
 
 from ..defines import GCP_CREDS_LOCAL_FILE
-from ..module_build_spec import ModuleBuildSpec
+from ..package_build_spec import PackageBuildSpec
 from ..utils import connect_sibling_docker_container, network_buildkite_container
 from .test_images import publish_test_images, test_image_depends_fn
 
@@ -61,7 +61,7 @@ def backcompat_suite_extra_cmds_fn(release_mapping):
 def integration_steps():
     tests = []
     tests += publish_test_images()
-    tests += ModuleBuildSpec(
+    tests += PackageBuildSpec(
         os.path.join("integration_tests", "python_modules", "dagster-k8s-test-infra"),
         upload_coverage=True,
     ).get_tox_build_steps()
@@ -97,7 +97,7 @@ def build_spec_backcompat_suite():
 
     backcompat_build_steps = []
     for tox_env_suffix, release_mapping in tox_env_suffix_map.items():
-        backcompat_build_steps += ModuleBuildSpec(
+        backcompat_build_steps += PackageBuildSpec(
             os.path.join("integration_tests", "test_suites", "backcompat-test-suite"),
             extra_cmds_fn=backcompat_suite_extra_cmds_fn(release_mapping),
             tox_env_suffixes=[tox_env_suffix],
@@ -159,7 +159,7 @@ def build_steps_integration_suite(
     extra_commands_fn=integration_suite_extra_cmds_fn,
     queue=None,
 ):
-    return ModuleBuildSpec(
+    return PackageBuildSpec(
         directory,
         env_vars=[
             "AIRFLOW_HOME",

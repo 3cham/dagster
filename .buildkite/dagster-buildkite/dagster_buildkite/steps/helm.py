@@ -2,7 +2,7 @@ import os
 from typing import List
 
 from ..defines import SupportedPython
-from ..module_build_spec import ModuleBuildSpec
+from ..package_build_spec import PackageBuildSpec
 from ..step_builder import StepBuilder
 
 
