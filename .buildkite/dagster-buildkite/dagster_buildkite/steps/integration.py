@@ -6,23 +6,28 @@ import requests
 
 from ..defines import GCP_CREDS_LOCAL_FILE
 from ..package_build_spec import PackageBuildSpec
-from ..utils import CommandStep, connect_sibling_docker_container, network_buildkite_container
-from .test_images import build_publish_test_image_steps, test_image_depends_fn
+from ..utils import (
+    BuildkiteStep,
+    GroupStep,
+    connect_sibling_docker_container,
+    network_buildkite_container,
+)
+from .test_images import build_test_image_steps, test_image_depends_fn
 
 SCRIPT_PATH = os.path.dirname(os.path.abspath(__file__))
 DAGSTER_CURRENT_BRANCH = "current_branch"
 EARLIEST_TESTED_RELEASE = "0.12.8"
 
 
-def build_integration_steps() -> List[CommandStep]:
-    steps = []
-    steps += build_publish_test_image_steps()
+def build_integration_steps() -> List[BuildkiteStep]:
+    steps: List[BuildkiteStep] = []
+    steps += build_test_image_steps()
 
     # Shared dependency of some test suites
     steps += PackageBuildSpec(
         os.path.join("integration_tests", "python_modules", "dagster-k8s-test-infra"),
         upload_coverage=True,
-    ).build_tox_steps()
+    ).build_steps()
 
     # test suites
     steps += build_backcompat_suite_steps()
@@ -38,7 +43,7 @@ def build_integration_steps() -> List[CommandStep]:
 # ########################
 
 
-def build_backcompat_suite_steps() -> List[CommandStep]:
+def build_backcompat_suite_steps() -> List[BuildkiteStep]:
     most_recent_dagster_release = _get_latest_dagster_release()
     tox_env_suffix_map = {
         "-dagit-latest-release": {
@@ -59,16 +64,17 @@ def build_backcompat_suite_steps() -> List[CommandStep]:
         },
     }
 
-    backcompat_build_steps = []
+    backcompat_build_steps: List[BuildkiteStep] = []
     for tox_env_suffix, release_mapping in tox_env_suffix_map.items():
         backcompat_build_steps += PackageBuildSpec(
             os.path.join("integration_tests", "test_suites", "backcompat-test-suite"),
             extra_cmds_fn=make_backcompat_extra_cmds_fn(release_mapping),
             tox_env_suffixes=[tox_env_suffix],
-            buildkite_label="backcompat_tests",
+            buildkite_label=f"backcompat-tests{tox_env_suffix}",
             upload_coverage=False,
             retries=2,
-        ).build_tox_steps()
+        ).build_steps()
+
     return backcompat_build_steps
 
 
@@ -100,7 +106,7 @@ def make_backcompat_extra_cmds_fn(release_mapping: Dict[str, str]) -> Callable[[
 # ########################
 
 
-def build_celery_k8s_suite_steps() -> List[CommandStep]:
+def build_celery_k8s_suite_steps() -> List[GroupStep]:
     tox_env_suffixes = [
         "-default",
         "-markusercodedeploymentsubchart",
@@ -163,7 +169,7 @@ def build_integration_suite_steps(
     upload_coverage: bool,
     extra_commands_fn: Optional[Callable] = None,
     queue=None,
-):
+) -> List[GroupStep]:
     extra_commands_fn = extra_commands_fn or integration_suite_extra_cmds_fn
     return PackageBuildSpec(
         directory,
@@ -182,7 +188,7 @@ def build_integration_suite_steps(
         retries=2,
         timeout_in_minutes=30,
         queue=queue,
-    ).build_tox_steps()
+    ).build_steps()
 
 
 def integration_suite_extra_cmds_fn(version: str) -> List[str]:

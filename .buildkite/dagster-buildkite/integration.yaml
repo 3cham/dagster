@@ -1,0 +1,3687 @@
+env:
+  CI_BRANCH: $BUILDKITE_BRANCH
+  CI_BUILD_NUMBER: $BUILDKITE_BUILD_NUMBER
+  CI_BUILD_URL: $BUILDKITE_BUILD_URL
+  CI_NAME: buildkite
+  CI_PULL_REQUEST: $BUILDKITE_PULL_REQUEST
+steps:
+- group: ':docker: test-image'
+  key: test-image
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time /scriptdir/aws.pex ecr get-login --no-include-email --region us-west-2
+      | sh
+    - time export GOOGLE_APPLICATION_CREDENTIALS="/tmp/gcp-key-elementl-dev.json"
+    - time /scriptdir/aws.pex s3 cp s3://$${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json
+      $${GOOGLE_APPLICATION_CREDENTIALS}
+    - time export BASE_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-unit:py3.6.15-2022-02-08T230233
+    - time export TEST_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image:$${BUILDKITE_BUILD_ID}-3.6.15
+    - time ./python_modules/dagster-test/dagster_test/test_project/build.sh 3.6.15
+      $${TEST_IMAGE}
+    - "time echo -e \"--- \e[32m:docker: Pushing Docker image\e[0m\""
+    - time docker push $${TEST_IMAGE}
+    key: dagster-test-images-py36
+    label: ':docker: test-image 3.6.15'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-builder:py3.8.12-2022-02-08T230920
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time /scriptdir/aws.pex ecr get-login --no-include-email --region us-west-2
+      | sh
+    - time export BASE_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-unit:py3.6.15-2022-02-08T230233
+    - time export TEST_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-core:$${BUILDKITE_BUILD_ID}-3.6.15
+    - time ./python_modules/dagster-test/build_core.sh 3.6.15 $${TEST_IMAGE}
+    - "time echo -e \"--- \e[32m:docker: Pushing Docker image\e[0m\""
+    - time docker push $${TEST_IMAGE}
+    key: dagster-core-test-images-py36
+    label: ':docker: test-image-core 3.6.15'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-builder:py3.8.12-2022-02-08T230920
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time /scriptdir/aws.pex ecr get-login --no-include-email --region us-west-2
+      | sh
+    - time export GOOGLE_APPLICATION_CREDENTIALS="/tmp/gcp-key-elementl-dev.json"
+    - time /scriptdir/aws.pex s3 cp s3://$${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json
+      $${GOOGLE_APPLICATION_CREDENTIALS}
+    - time export BASE_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-unit:py3.7.12-2022-02-08T230233
+    - time export TEST_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image:$${BUILDKITE_BUILD_ID}-3.7.12
+    - time ./python_modules/dagster-test/dagster_test/test_project/build.sh 3.7.12
+      $${TEST_IMAGE}
+    - "time echo -e \"--- \e[32m:docker: Pushing Docker image\e[0m\""
+    - time docker push $${TEST_IMAGE}
+    key: dagster-test-images-py37
+    label: ':docker: test-image 3.7.12'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-builder:py3.8.12-2022-02-08T230920
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time /scriptdir/aws.pex ecr get-login --no-include-email --region us-west-2
+      | sh
+    - time export BASE_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-unit:py3.7.12-2022-02-08T230233
+    - time export TEST_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-core:$${BUILDKITE_BUILD_ID}-3.7.12
+    - time ./python_modules/dagster-test/build_core.sh 3.7.12 $${TEST_IMAGE}
+    - "time echo -e \"--- \e[32m:docker: Pushing Docker image\e[0m\""
+    - time docker push $${TEST_IMAGE}
+    key: dagster-core-test-images-py37
+    label: ':docker: test-image-core 3.7.12'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-builder:py3.8.12-2022-02-08T230920
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time /scriptdir/aws.pex ecr get-login --no-include-email --region us-west-2
+      | sh
+    - time export GOOGLE_APPLICATION_CREDENTIALS="/tmp/gcp-key-elementl-dev.json"
+    - time /scriptdir/aws.pex s3 cp s3://$${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json
+      $${GOOGLE_APPLICATION_CREDENTIALS}
+    - time export BASE_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-unit:py3.8.12-2022-02-08T230233
+    - time export TEST_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image:$${BUILDKITE_BUILD_ID}-3.8.12
+    - time ./python_modules/dagster-test/dagster_test/test_project/build.sh 3.8.12
+      $${TEST_IMAGE}
+    - "time echo -e \"--- \e[32m:docker: Pushing Docker image\e[0m\""
+    - time docker push $${TEST_IMAGE}
+    key: dagster-test-images-py38
+    label: ':docker: test-image 3.8.12'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-builder:py3.8.12-2022-02-08T230920
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time /scriptdir/aws.pex ecr get-login --no-include-email --region us-west-2
+      | sh
+    - time export BASE_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-unit:py3.8.12-2022-02-08T230233
+    - time export TEST_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-core:$${BUILDKITE_BUILD_ID}-3.8.12
+    - time ./python_modules/dagster-test/build_core.sh 3.8.12 $${TEST_IMAGE}
+    - "time echo -e \"--- \e[32m:docker: Pushing Docker image\e[0m\""
+    - time docker push $${TEST_IMAGE}
+    key: dagster-core-test-images-py38
+    label: ':docker: test-image-core 3.8.12'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-builder:py3.8.12-2022-02-08T230920
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time /scriptdir/aws.pex ecr get-login --no-include-email --region us-west-2
+      | sh
+    - time export GOOGLE_APPLICATION_CREDENTIALS="/tmp/gcp-key-elementl-dev.json"
+    - time /scriptdir/aws.pex s3 cp s3://$${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json
+      $${GOOGLE_APPLICATION_CREDENTIALS}
+    - time export BASE_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-unit:py3.9.10-2022-02-08T230233
+    - time export TEST_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image:$${BUILDKITE_BUILD_ID}-3.9.10
+    - time ./python_modules/dagster-test/dagster_test/test_project/build.sh 3.9.10
+      $${TEST_IMAGE}
+    - "time echo -e \"--- \e[32m:docker: Pushing Docker image\e[0m\""
+    - time docker push $${TEST_IMAGE}
+    key: dagster-test-images-py39
+    label: ':docker: test-image 3.9.10'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-builder:py3.8.12-2022-02-08T230920
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time /scriptdir/aws.pex ecr get-login --no-include-email --region us-west-2
+      | sh
+    - time export BASE_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-unit:py3.9.10-2022-02-08T230233
+    - time export TEST_IMAGE=$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-core:$${BUILDKITE_BUILD_ID}-3.9.10
+    - time ./python_modules/dagster-test/build_core.sh 3.9.10 $${TEST_IMAGE}
+    - "time echo -e \"--- \e[32m:docker: Pushing Docker image\e[0m\""
+    - time docker push $${TEST_IMAGE}
+    key: dagster-core-test-images-py39
+    label: ':docker: test-image-core 3.9.10'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-test-image-builder:py3.8.12-2022-02-08T230920
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+- group: ':package: dagster-k8s-test-infra'
+  key: dagster-k8s-test-infra
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/python_modules/dagster-k8s-test-infra
+    - time tox -vv -e py36
+    - time mv .coverage .coverage.dagster-k8s-test-infra.3.6.15.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.dagster-k8s-test-infra.3.6.15.$BUILDKITE_BUILD_ID
+    label: ':pytest: dagster-k8s-test-infra 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/python_modules/dagster-k8s-test-infra
+    - time tox -vv -e py37
+    - time mv .coverage .coverage.dagster-k8s-test-infra.3.7.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.dagster-k8s-test-infra.3.7.12.$BUILDKITE_BUILD_ID
+    label: ':pytest: dagster-k8s-test-infra 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/python_modules/dagster-k8s-test-infra
+    - time tox -vv -e py38
+    - time mv .coverage .coverage.dagster-k8s-test-infra.3.8.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.dagster-k8s-test-infra.3.8.12.$BUILDKITE_BUILD_ID
+    label: ':pytest: dagster-k8s-test-infra 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/python_modules/dagster-k8s-test-infra
+    - time tox -vv -e py39
+    - time mv .coverage .coverage.dagster-k8s-test-infra.3.9.10.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.dagster-k8s-test-infra.3.9.10.$BUILDKITE_BUILD_ID
+    label: ':pytest: dagster-k8s-test-infra 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/python_modules/dagster-k8s-test-infra
+    - time tox -vv -e mypy
+    label: ':mypy: dagster-k8s-test-infra'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/python_modules/dagster-k8s-test-infra
+    - time tox -vv -e pylint
+    label: ':lint-roller: dagster-k8s-test-infra'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+- group: ':package: backcompat_tests'
+  key: backcompat_tests
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh 0.14.15 current_branch
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py36-dagit-latest-release
+    label: ':pytest: backcompat_tests-dagit-latest-release 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh 0.14.15 current_branch
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py37-dagit-latest-release
+    label: ':pytest: backcompat_tests-dagit-latest-release 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh 0.14.15 current_branch
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py38-dagit-latest-release
+    label: ':pytest: backcompat_tests-dagit-latest-release 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh 0.14.15 current_branch
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py39-dagit-latest-release
+    label: ':pytest: backcompat_tests-dagit-latest-release 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e mypy
+    label: ':mypy: backcompat-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e pylint
+    label: ':lint-roller: backcompat-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+- group: ':package: backcompat_tests'
+  key: backcompat_tests
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh 0.12.8 current_branch
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py36-dagit-earliest-release
+    label: ':pytest: backcompat_tests-dagit-earliest-release 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh 0.12.8 current_branch
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py37-dagit-earliest-release
+    label: ':pytest: backcompat_tests-dagit-earliest-release 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh 0.12.8 current_branch
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py38-dagit-earliest-release
+    label: ':pytest: backcompat_tests-dagit-earliest-release 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh 0.12.8 current_branch
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py39-dagit-earliest-release
+    label: ':pytest: backcompat_tests-dagit-earliest-release 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e mypy
+    label: ':mypy: backcompat-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e pylint
+    label: ':lint-roller: backcompat-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+- group: ':package: backcompat_tests'
+  key: backcompat_tests
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh current_branch 0.14.15
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py36-user-code-latest-release
+    label: ':pytest: backcompat_tests-user-code-latest-release 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh current_branch 0.14.15
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py37-user-code-latest-release
+    label: ':pytest: backcompat_tests-user-code-latest-release 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh current_branch 0.14.15
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py38-user-code-latest-release
+    label: ':pytest: backcompat_tests-user-code-latest-release 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh current_branch 0.14.15
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py39-user-code-latest-release
+    label: ':pytest: backcompat_tests-user-code-latest-release 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e mypy
+    label: ':mypy: backcompat-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e pylint
+    label: ':lint-roller: backcompat-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+- group: ':package: backcompat_tests'
+  key: backcompat_tests
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh current_branch 0.12.8
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py36-user-code-earliest-release
+    label: ':pytest: backcompat_tests-user-code-earliest-release 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh current_branch 0.12.8
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py37-user-code-earliest-release
+    label: ':pytest: backcompat_tests-user-code-earliest-release 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh current_branch 0.12.8
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py38-user-code-earliest-release
+    label: ':pytest: backcompat_tests-user-code-earliest-release 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export EARLIEST_TESTED_RELEASE=0.12.8
+    - time pushd integration_tests/test_suites/backcompat-test-suite/dagit_service
+    - time ./build.sh current_branch 0.12.8
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect dagit_service_network \${CONTAINER_NAME}
+    - time export BACKCOMPAT_TESTS_DAGIT_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.dagit_service_network.IPAddress
+      }}' dagit`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e py39-user-code-earliest-release
+    label: ':pytest: backcompat_tests-user-code-earliest-release 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e mypy
+    label: ':mypy: backcompat-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/backcompat-test-suite
+    - time tox -vv -e pylint
+    label: ':lint-roller: backcompat-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+- group: ':package: celery-k8s-test-suite'
+  key: celery-k8s-test-suite
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.6.15
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py36-default
+    - time mv .coverage .coverage.celery-k8s-test-suite-default.3.6.15.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-default.3.6.15.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py36
+    label: ':pytest: celery-k8s-test-suite-default 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.6.15
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py36-markusercodedeploymentsubchart
+    - time mv .coverage .coverage.celery-k8s-test-suite-markusercodedeploymentsubchart.3.6.15.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markusercodedeploymentsubchart.3.6.15.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py36
+    label: ':pytest: celery-k8s-test-suite-markusercodedeploymentsubchart 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.6.15
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py36-markdaemon
+    - time mv .coverage .coverage.celery-k8s-test-suite-markdaemon.3.6.15.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markdaemon.3.6.15.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py36
+    label: ':pytest: celery-k8s-test-suite-markdaemon 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.6.15
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py36-markredis
+    - time mv .coverage .coverage.celery-k8s-test-suite-markredis.3.6.15.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markredis.3.6.15.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py36
+    label: ':pytest: celery-k8s-test-suite-markredis 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.6.15
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py36-markmonitoring
+    - time mv .coverage .coverage.celery-k8s-test-suite-markmonitoring.3.6.15.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markmonitoring.3.6.15.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py36
+    label: ':pytest: celery-k8s-test-suite-markmonitoring 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.7.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py37-default
+    - time mv .coverage .coverage.celery-k8s-test-suite-default.3.7.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-default.3.7.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py37
+    label: ':pytest: celery-k8s-test-suite-default 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.7.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py37-markusercodedeploymentsubchart
+    - time mv .coverage .coverage.celery-k8s-test-suite-markusercodedeploymentsubchart.3.7.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markusercodedeploymentsubchart.3.7.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py37
+    label: ':pytest: celery-k8s-test-suite-markusercodedeploymentsubchart 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.7.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py37-markdaemon
+    - time mv .coverage .coverage.celery-k8s-test-suite-markdaemon.3.7.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markdaemon.3.7.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py37
+    label: ':pytest: celery-k8s-test-suite-markdaemon 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.7.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py37-markredis
+    - time mv .coverage .coverage.celery-k8s-test-suite-markredis.3.7.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markredis.3.7.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py37
+    label: ':pytest: celery-k8s-test-suite-markredis 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.7.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py37-markmonitoring
+    - time mv .coverage .coverage.celery-k8s-test-suite-markmonitoring.3.7.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markmonitoring.3.7.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py37
+    label: ':pytest: celery-k8s-test-suite-markmonitoring 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.8.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py38-default
+    - time mv .coverage .coverage.celery-k8s-test-suite-default.3.8.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-default.3.8.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py38
+    label: ':pytest: celery-k8s-test-suite-default 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.8.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py38-markusercodedeploymentsubchart
+    - time mv .coverage .coverage.celery-k8s-test-suite-markusercodedeploymentsubchart.3.8.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markusercodedeploymentsubchart.3.8.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py38
+    label: ':pytest: celery-k8s-test-suite-markusercodedeploymentsubchart 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.8.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py38-markdaemon
+    - time mv .coverage .coverage.celery-k8s-test-suite-markdaemon.3.8.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markdaemon.3.8.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py38
+    label: ':pytest: celery-k8s-test-suite-markdaemon 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.8.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py38-markredis
+    - time mv .coverage .coverage.celery-k8s-test-suite-markredis.3.8.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markredis.3.8.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py38
+    label: ':pytest: celery-k8s-test-suite-markredis 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.8.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py38-markmonitoring
+    - time mv .coverage .coverage.celery-k8s-test-suite-markmonitoring.3.8.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markmonitoring.3.8.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py38
+    label: ':pytest: celery-k8s-test-suite-markmonitoring 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.9.10
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py39-default
+    - time mv .coverage .coverage.celery-k8s-test-suite-default.3.9.10.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-default.3.9.10.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py39
+    label: ':pytest: celery-k8s-test-suite-default 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.9.10
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py39-markusercodedeploymentsubchart
+    - time mv .coverage .coverage.celery-k8s-test-suite-markusercodedeploymentsubchart.3.9.10.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markusercodedeploymentsubchart.3.9.10.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py39
+    label: ':pytest: celery-k8s-test-suite-markusercodedeploymentsubchart 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.9.10
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py39-markdaemon
+    - time mv .coverage .coverage.celery-k8s-test-suite-markdaemon.3.9.10.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markdaemon.3.9.10.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py39
+    label: ':pytest: celery-k8s-test-suite-markdaemon 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.9.10
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py39-markredis
+    - time mv .coverage .coverage.celery-k8s-test-suite-markredis.3.9.10.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markredis.3.9.10.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py39
+    label: ':pytest: celery-k8s-test-suite-markredis 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.9.10
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e py39-markmonitoring
+    - time mv .coverage .coverage.celery-k8s-test-suite-markmonitoring.3.9.10.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.celery-k8s-test-suite-markmonitoring.3.9.10.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py39
+    label: ':pytest: celery-k8s-test-suite-markmonitoring 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e mypy
+    label: ':mypy: celery-k8s-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/celery-k8s-test-suite
+    - time tox -vv -e pylint
+    label: ':lint-roller: celery-k8s-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+- group: ':package: k8s-test-suite'
+  key: k8s-test-suite
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.6.15
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e py36-default
+    - time mv .coverage .coverage.k8s-test-suite-default.3.6.15.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.k8s-test-suite-default.3.6.15.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py36
+    label: ':pytest: k8s-test-suite-default 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.6.15
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e py36-subchart
+    - time mv .coverage .coverage.k8s-test-suite-subchart.3.6.15.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.k8s-test-suite-subchart.3.6.15.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py36
+    label: ':pytest: k8s-test-suite-subchart 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.7.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e py37-default
+    - time mv .coverage .coverage.k8s-test-suite-default.3.7.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.k8s-test-suite-default.3.7.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py37
+    label: ':pytest: k8s-test-suite-default 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.7.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e py37-subchart
+    - time mv .coverage .coverage.k8s-test-suite-subchart.3.7.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.k8s-test-suite-subchart.3.7.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py37
+    label: ':pytest: k8s-test-suite-subchart 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.8.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e py38-default
+    - time mv .coverage .coverage.k8s-test-suite-default.3.8.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.k8s-test-suite-default.3.8.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py38
+    label: ':pytest: k8s-test-suite-default 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.8.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e py38-subchart
+    - time mv .coverage .coverage.k8s-test-suite-subchart.3.8.12.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.k8s-test-suite-subchart.3.8.12.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py38
+    label: ':pytest: k8s-test-suite-subchart 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.9.10
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e py39-default
+    - time mv .coverage .coverage.k8s-test-suite-default.3.9.10.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.k8s-test-suite-default.3.9.10.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py39
+    label: ':pytest: k8s-test-suite-default 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export AIRFLOW_HOME="/airflow"
+    - time mkdir -p $${AIRFLOW_HOME}
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.9.10
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time aws ecr get-login --no-include-email --region us-west-2 | sh
+    - time aws s3 cp s3://\${BUILDKITE_SECRETS_BUCKET}/gcp-key-elementl-dev.json /tmp/gcp-key-elementl-dev.json
+    - time export GOOGLE_APPLICATION_CREDENTIALS=/tmp/gcp-key-elementl-dev.json
+    - time pushd python_modules/libraries/dagster-celery
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect rabbitmq \${CONTAINER_NAME}
+    - time export DAGSTER_CELERY_BROKER_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.rabbitmq.IPAddress
+      }}' test-rabbitmq`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e py39-subchart
+    - time mv .coverage .coverage.k8s-test-suite-subchart.3.9.10.$BUILDKITE_BUILD_ID
+    - time buildkite-agent artifact upload .coverage.k8s-test-suite-subchart.3.9.10.$BUILDKITE_BUILD_ID
+    depends_on:
+    - dagster-test-images-py39
+    label: ':pytest: k8s-test-suite-subchart 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e mypy
+    label: ':mypy: k8s-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/k8s-test-suite
+    - time tox -vv -e pylint
+    label: ':lint-roller: k8s-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+- group: ':package: daemon-test-suite'
+  key: daemon-test-suite
+  steps:
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.6.15
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time pushd integration_tests/test_suites/daemon-test-suite/monitoring_daemon_tests/
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect postgres \${CONTAINER_NAME}
+    - time export POSTGRES_TEST_DB_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.postgres.IPAddress
+      }}' test-postgres-db-docker`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/daemon-test-suite
+    - time tox -vv -e py36
+    depends_on:
+    - dagster-test-images-py36
+    label: ':pytest: daemon-test-suite 3.6'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.6.15-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.7.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time pushd integration_tests/test_suites/daemon-test-suite/monitoring_daemon_tests/
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect postgres \${CONTAINER_NAME}
+    - time export POSTGRES_TEST_DB_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.postgres.IPAddress
+      }}' test-postgres-db-docker`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/daemon-test-suite
+    - time tox -vv -e py37
+    depends_on:
+    - dagster-test-images-py37
+    label: ':pytest: daemon-test-suite 3.7'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.7.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.8.12
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time pushd integration_tests/test_suites/daemon-test-suite/monitoring_daemon_tests/
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect postgres \${CONTAINER_NAME}
+    - time export POSTGRES_TEST_DB_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.postgres.IPAddress
+      }}' test-postgres-db-docker`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/daemon-test-suite
+    - time tox -vv -e py38
+    depends_on:
+    - dagster-test-images-py38
+    label: ':pytest: daemon-test-suite 3.8'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time export DAGSTER_DOCKER_IMAGE_TAG=$${BUILDKITE_BUILD_ID}-3.9.10
+    - time export DAGSTER_DOCKER_REPOSITORY="$${AWS_ACCOUNT_ID}.dkr.ecr.us-west-2.amazonaws.com"
+    - time pushd integration_tests/test_suites/daemon-test-suite/monitoring_daemon_tests/
+    - time docker-compose up -d --remove-orphans
+    - time export CONTAINER_ID=`cut -c9- < /proc/1/cpuset`
+    - time export CONTAINER_NAME=`docker ps --filter "id=\${CONTAINER_ID}" --format
+      "{{.Names}}"`
+    - time docker network connect postgres \${CONTAINER_NAME}
+    - time export POSTGRES_TEST_DB_HOST=`docker inspect --format '{{ .NetworkSettings.Networks.postgres.IPAddress
+      }}' test-postgres-db-docker`
+    - time popd
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/daemon-test-suite
+    - time tox -vv -e py39
+    depends_on:
+    - dagster-test-images-py39
+    label: ':pytest: daemon-test-suite 3.9'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        - AIRFLOW_HOME
+        - AWS_ACCOUNT_ID
+        - AWS_ACCESS_KEY_ID
+        - AWS_SECRET_ACCESS_KEY
+        - BUILDKITE_SECRETS_BUCKET
+        - GOOGLE_APPLICATION_CREDENTIALS
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.9.10-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+        limit: 2
+    timeout_in_minutes: 30
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/daemon-test-suite
+    - time tox -vv -e mypy
+    label: ':mypy: daemon-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+  - agents:
+      queue: buildkite-medium-v5-0-1
+    commands:
+    - time pip install -U virtualenv
+    - time cd integration_tests/test_suites/daemon-test-suite
+    - time tox -vv -e pylint
+    label: ':lint-roller: daemon-test-suite'
+    plugins:
+    - ecr#v2.2.0:
+        account-ids: null
+        login: true
+        no-include-email: true
+        region: us-west-2
+        retries: 2
+    - docker#v3.7.0:
+        always-pull: true
+        environment:
+        - BUILDKITE
+        - PYTEST_DEBUG_TEMPROOT=/tmp
+        image: None.dkr.ecr.us-west-2.amazonaws.com/buildkite-integration:py3.8.12-2022-02-08T054508
+        mount-ssh-agent: true
+        network: kind
+        shell:
+        - /bin/bash
+        - -xeuc
+        volumes:
+        - /var/run/docker.sock:/var/run/docker.sock
+        - /tmp:/tmp
+    retry:
+      automatic:
+      - exit_status: -1
+        limit: 2
+      - exit_status: 255
+        limit: 2
+      manual:
+        permit_on_passed: true
+    timeout_in_minutes: 20
+

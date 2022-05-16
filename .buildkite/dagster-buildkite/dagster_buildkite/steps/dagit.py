@@ -7,7 +7,7 @@ from ..utils import CommandStep
 
 def build_dagit_steps() -> List[CommandStep]:
     return [
-        StepBuilder("dagit webapp tests")
+        StepBuilder(":typescript: dagit webapp tests")
         .run(
             "cd js_modules/dagit",
             "tox -vv -e py37",

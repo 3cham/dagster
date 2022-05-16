@@ -2,16 +2,12 @@ import os
 from glob import glob
 from typing import List
 
-from ..defines import (
-    DEFAULT_PYTHON_VERSION,
-    GCP_CREDS_LOCAL_FILE,
-    ExamplePythons,
-    SupportedPython,
-)
+from ..defines import DEFAULT_PYTHON_VERSION, GCP_CREDS_LOCAL_FILE, ExamplePythons, SupportedPython
 from ..images.versions import COVERAGE_IMAGE_VERSION
 from ..package_build_spec import PackageBuildSpec
 from ..step_builder import StepBuilder
 from ..utils import (
+    BuildkiteStep,
     CommandStep,
     connect_sibling_docker_container,
     is_release_branch,
@@ -20,20 +16,19 @@ from ..utils import (
 )
 from .docs import build_docs_steps
 from .helm import build_helm_steps
-from .test_images import (
-    build_publish_test_image_steps,
-    core_test_image_depends_fn,
-    test_image_depends_fn,
-)
+from .test_images import build_test_image_steps, core_test_image_depends_fn, test_image_depends_fn
 
 GIT_REPO_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "..", "..")
 
 branch_name = safe_getenv("BUILDKITE_BRANCH")
 
 
-def build_dagster_steps() -> List[CommandStep]:
-    steps = []
-    steps += build_publish_test_image_steps()
+def build_dagster_steps() -> List[BuildkiteStep]:
+    steps: List[BuildkiteStep] = []
+
+    # Build images containing the dagster-test sample project. This is a dependency of certain
+    # dagster core and extension lib tests.
+    steps += build_test_image_steps()
 
     # Other linters are run in per-package environments because they rely on the dependencies of the
     # target. `black`, `isort`, and `check-manifest` are run for the whole repo at once.
@@ -45,7 +40,7 @@ def build_dagster_steps() -> List[CommandStep]:
     # instances, a directory of unrelated scripts counts as a package. All packages must have a
     # toxfile that defines the tests for that package.
     for m in DAGSTER_PACKAGES_WITH_CUSTOM_TESTS + DAGSTER_PACKAGES_WITH_STANDARD_STEPS:
-        steps += m.build_tox_steps()
+        steps += m.build_steps()
 
     steps += build_docs_steps()
     steps += build_helm_steps()
@@ -642,7 +637,7 @@ def build_pylint_misc_steps() -> List[CommandStep]:
 
 def build_repo_wide_black_steps() -> List[CommandStep]:
     return [
-        StepBuilder(":python-black:")
+        StepBuilder(":python-black: black")
         # See: https://github.com/dagster-io/dagster/issues/1999
         .run("pip install -e python_modules/dagster[black]", "make check_black")
         .on_integration_image(SupportedPython.V3_7)
@@ -652,7 +647,7 @@ def build_repo_wide_black_steps() -> List[CommandStep]:
 
 def build_repo_wide_isort_steps() -> List[CommandStep]:
     return [
-        StepBuilder(":isort:")
+        StepBuilder(":isort: isort")
         .run("pip install -e python_modules/dagster[isort]", "make check_isort")
         .on_integration_image(SupportedPython.V3_7)
         .build(),
@@ -675,12 +670,17 @@ def build_repo_wide_check_manifest_steps(version=DEFAULT_PYTHON_VERSION) -> List
         *(f"check-manifest {library}" for library in published_packages),
     ]
 
-    return [StepBuilder("check-manifest").on_integration_image(version).run(*commands).build()]
+    return [
+        StepBuilder(":white_check_mark: check-manifest")
+        .on_integration_image(version)
+        .run(*commands)
+        .build()
+    ]
 
 
 def build_sql_schema_check_steps(version=DEFAULT_PYTHON_VERSION) -> List[CommandStep]:
     return [
-        StepBuilder("SQL schema checks")
+        StepBuilder(":mysql: mysql-schema")
         .on_integration_image(version)
         .run("pip install -e python_modules/dagster", "python scripts/check_schemas.py")
         .build()
@@ -691,7 +691,7 @@ def build_graphql_python_client_backcompat_steps(
     version=DEFAULT_PYTHON_VERSION,
 ) -> List[CommandStep]:
     return [
-        StepBuilder("Backwards compat checks for the GraphQL Python Client")
+        StepBuilder(":graphql: GraphQL Python Client backcompat")
         .on_integration_image(version)
         .run(
             "pip install -e python_modules/dagster[test] -e python_modules/dagster-graphql -e python_modules/automation",

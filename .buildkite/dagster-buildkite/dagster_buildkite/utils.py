@@ -32,6 +32,12 @@ class CommandStep(TypedDict, total=False):
     timeout_in_minutes: int
 
 
+class GroupStep(TypedDict):
+    group: str
+    key: str
+    steps: List["BuildkiteLeafStep"]  # no nested groups
+
+
 # use alt syntax because of `async` and `if` reserved words
 TriggerStep = TypedDict(
     "TriggerStep",
@@ -48,7 +54,8 @@ TriggerStep = TypedDict(
 
 WaitStep: TypeAlias = Literal["wait"]
 
-BuildkiteStep: TypeAlias = Union[CommandStep, TriggerStep, WaitStep]
+BuildkiteStep: TypeAlias = Union[CommandStep, GroupStep, TriggerStep, WaitStep]
+BuildkiteLeafStep = Union[CommandStep, TriggerStep, WaitStep]
 
 # ########################
 # ##### FUNCTIONS

@@ -1,5 +1,6 @@
 from typing import Dict, List
 
+
 class SupportedPython:
     V3_9 = "3.9.10"
     V3_8 = "3.8.12"

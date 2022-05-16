@@ -3,14 +3,14 @@ from typing import List
 from ..defines import TOX_MAP, SupportedPython
 from ..images.versions import TEST_IMAGE_BUILDER_VERSION, UNIT_IMAGE_VERSION
 from ..step_builder import StepBuilder
-from ..utils import CommandStep, get_python_versions_for_branch
+from ..utils import BuildkiteLeafStep, GroupStep, get_python_versions_for_branch
 
 
-def build_publish_test_image_steps() -> List[CommandStep]:
+def build_test_image_steps() -> List[GroupStep]:
     """This set of tasks builds and pushes Docker images, which are used by the dagster-airflow and
     the dagster-k8s tests
     """
-    steps = []
+    steps: List[BuildkiteLeafStep] = []
     for version in get_python_versions_for_branch(
         pr_versions=[SupportedPython.V3_8, SupportedPython.V3_9]
     ):
@@ -89,7 +89,13 @@ def build_publish_test_image_steps() -> List[CommandStep]:
             )
             .build()
         )
-    return steps
+    return [
+        GroupStep(
+            group=":docker: test-image",
+            key="test-image",
+            steps=steps,
+        )
+    ]
 
 
 def _test_image_step(version: str) -> str:

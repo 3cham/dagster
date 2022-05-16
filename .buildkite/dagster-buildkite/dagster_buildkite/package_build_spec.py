@@ -1,10 +1,10 @@
 from typing import Callable, List, NamedTuple, Optional
 
 from .defines import TOX_MAP
-from .step_builder import BuildkiteQueue, CommandStep, StepBuilder
+from .step_builder import BuildkiteQueue, StepBuilder
 from .steps.mypy import build_mypy_step
 from .steps.pylint import build_pylint_step
-from .utils import get_python_versions_for_branch
+from .utils import BuildkiteLeafStep, GroupStep, get_python_versions_for_branch
 
 
 class PackageBuildSpec(
@@ -104,9 +104,9 @@ class PackageBuildSpec(
             run_pylint,
         )
 
-    def build_tox_steps(self) -> List[CommandStep]:
+    def build_steps(self) -> List[GroupStep]:
         base_label = self.buildkite_label or self.directory.split("/")[-1]
-        steps = []
+        steps: List[BuildkiteLeafStep] = []
 
         tox_env_suffixes = self.tox_env_suffixes or [""]
 
@@ -162,4 +162,10 @@ class PackageBuildSpec(
             # Toxfile must define a pylint testenv.
             steps.append(build_pylint_step(self.directory))
 
-        return steps
+        return [
+            GroupStep(
+                group=f":package: {base_label}",
+                key=base_label,
+                steps=steps,
+            )
+        ]

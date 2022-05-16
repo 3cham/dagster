@@ -2,13 +2,13 @@ from typing import List
 
 from ..defines import SupportedPython
 from ..step_builder import StepBuilder
-from ..utils import CommandStep
+from ..utils import BuildkiteLeafStep, GroupStep
 from .mypy import build_mypy_step
 from .pylint import build_pylint_step
 
 
-def build_docs_steps() -> List[CommandStep]:
-    return [
+def build_docs_steps() -> List[GroupStep]:
+    steps: List[BuildkiteLeafStep] = [
         # If this test is failing, it's because you may have either:
         #   (1) Updated the code that is referenced by a literalinclude in the documentation
         #   (2) Directly modified the inline snapshot of a literalinclude instead of updating
@@ -43,4 +43,11 @@ def build_docs_steps() -> List[CommandStep]:
         .build(),
         build_mypy_step("docs"),
         build_pylint_step("docs"),
+    ]
+    return [
+        GroupStep(
+            group=":book: docs",
+            key="docs",
+            steps=steps,
+        )
     ]
