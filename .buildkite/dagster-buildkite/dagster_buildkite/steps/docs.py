@@ -1,11 +1,15 @@
 from typing import List
 
+from .mypy import build_mypy_step
+from .pylint import build_pylint_step
 from ..defines import SupportedPython
 from ..step_builder import StepBuilder
+from ..utils import CommandStep
 
 
-def docs_steps() -> List[dict]:
+def build_docs_steps() -> List[CommandStep]:
     return [
+
         # If this test is failing, it's because you may have either:
         #   (1) Updated the code that is referenced by a literalinclude in the documentation
         #   (2) Directly modified the inline snapshot of a literalinclude instead of updating
@@ -16,6 +20,7 @@ def docs_steps() -> List[dict]:
         .run("pushd docs; make docs_dev_install; make snapshot", "git diff --exit-code")
         .on_integration_image(SupportedPython.V3_7)
         .build(),
+
         # Make sure the docs site can build end-to-end.
         StepBuilder("docs next")
         .run(
@@ -26,6 +31,7 @@ def docs_steps() -> List[dict]:
         )
         .on_integration_image(SupportedPython.V3_7)
         .build(),
+
         StepBuilder("docs sphinx json build")
         .run(
             "pip install -U virtualenv",
@@ -34,8 +40,12 @@ def docs_steps() -> List[dict]:
         )
         .on_integration_image(SupportedPython.V3_8)
         .build(),
+
         StepBuilder("docs screenshot spec")
         .run("python docs/screenshot_capture/match_screenshots.py")
         .on_integration_image(SupportedPython.V3_8)
         .build(),
+
+        build_mypy_step("docs"),
+        build_pylint_step("docs"),
     ]
