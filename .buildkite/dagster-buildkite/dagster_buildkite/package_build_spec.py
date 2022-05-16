@@ -1,8 +1,9 @@
 from typing import Callable, List, NamedTuple, Optional
 
-from .defines import TOX_MAP, SupportedPython
+from .defines import TOX_MAP
 from .step_builder import BuildkiteQueue, CommandStep, StepBuilder
 from .steps.mypy import build_mypy_step
+from .steps.pylint import build_pylint_step
 from .utils import get_python_versions_for_branch
 
 class PackageBuildSpec(
@@ -23,6 +24,7 @@ class PackageBuildSpec(
             ("queue", Optional[BuildkiteQueue]),
             ("run_pytest", bool),
             ("run_mypy", bool),
+            ("run_pylint", bool),
         ],
     )
 ):
@@ -80,6 +82,7 @@ class PackageBuildSpec(
         queue: Optional[BuildkiteQueue] = None,
         run_pytest: bool = True,
         run_mypy: bool = True,
+        run_pylint: bool = True,
     ):
         return super(PackageBuildSpec, cls).__new__(
             cls,
@@ -97,6 +100,7 @@ class PackageBuildSpec(
             queue,
             run_pytest,
             run_mypy,
+            run_pylint,
         )
 
     def build_tox_steps(self) -> List[CommandStep]:
@@ -149,20 +153,12 @@ class PackageBuildSpec(
 
                     steps.append(step.build())
 
-        # We expect the tox file to define a pylint testenv. This is run in a dedicated buildkite step.
-        steps.append(
-            StepBuilder(f":lint-roller: {base_label}")
-            .run(
-                "pip install -U virtualenv",
-                f"cd {self.directory}",
-                "tox -vv -e pylint",
-            )
-            .on_integration_image(SupportedPython.V3_8)
-            .build()
-        )
-
         if self.run_mypy:
             # Toxfile must define a mypy testenv.
             steps.append(build_mypy_step(self.directory))
+
+        if self.run_pylint:
+            # Toxfile must define a pylint testenv.
+            steps.append(build_pylint_step(self.directory))
 
         return steps
