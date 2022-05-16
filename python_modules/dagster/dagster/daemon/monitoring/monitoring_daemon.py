@@ -34,8 +34,8 @@ def monitor_starting_run(instance: DagsterInstance, run, logger):
     # TODO: consider attempting to resume the run, if the run worker is in a bad status
 
 
-def count_resume_run_attempts(instance: DagsterInstance, run):
-    events = instance.all_logs(run.run_id, of_type=DagsterEventType.ENGINE_EVENT)
+def count_resume_run_attempts(instance: DagsterInstance, run_id: str):
+    events = instance.all_logs(run_id, of_type=DagsterEventType.ENGINE_EVENT)
     return len([event for event in events if event.message == RESUME_RUN_LOG_MESSAGE])
 
 
