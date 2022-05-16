@@ -548,6 +548,10 @@ DAGSTER_PACKAGES_WITH_CUSTOM_TESTS: List[PackageBuildSpec] = [
             else [SupportedPython.V3_9]
         ),
     ),
+    PackageBuildSpec(
+        ".buildkite/dagster-buildkite",
+        run_pytest=False,
+    ),
 ]
 
 
