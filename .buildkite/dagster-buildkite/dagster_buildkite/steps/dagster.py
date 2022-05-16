@@ -288,6 +288,7 @@ DAGSTER_PACKAGES_WITH_CUSTOM_TESTS: List[PackageBuildSpec] = [
         buildkite_label="docs_snippets",
         upload_coverage=False,
         supported_pythons=ExamplePythons,
+        run_mypy=False,
     ),
     PackageBuildSpec(
         "examples/hacker_news_assets",
@@ -414,12 +415,14 @@ DAGSTER_PACKAGES_WITH_CUSTOM_TESTS: List[PackageBuildSpec] = [
     ),
     PackageBuildSpec(
         "python_modules/libraries/dagster-databricks",
+        run_mypy=False,
     ),
     PackageBuildSpec(
         "python_modules/libraries/dagster-docker",
         env_vars=["AWS_ACCOUNT_ID", "AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"],
         extra_cmds_fn=docker_extra_cmds_fn,
         depends_on_fn=test_image_depends_fn,
+        run_mypy=False,
     ),
     PackageBuildSpec(
         "python_modules/libraries/dagster-gcp",

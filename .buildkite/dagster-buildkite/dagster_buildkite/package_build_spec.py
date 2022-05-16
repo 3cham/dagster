@@ -2,14 +2,8 @@ from typing import Callable, List, NamedTuple, Optional
 
 from .defines import TOX_MAP, SupportedPython
 from .step_builder import BuildkiteQueue, CommandStep, StepBuilder
+from .steps.mypy import build_mypy_step
 from .utils import get_python_versions_for_branch
-
-MYPY_EXCLUDES = [
-    "python_modules/libraries/dagster-databricks",
-    "python_modules/libraries/dagster-docker",
-    "examples/docs_snippets",
-]
-
 
 class PackageBuildSpec(
     NamedTuple(
@@ -28,6 +22,7 @@ class PackageBuildSpec(
             ("timeout_in_minutes", Optional[int]),
             ("queue", Optional[BuildkiteQueue]),
             ("run_pytest", bool),
+            ("run_mypy", bool),
         ],
     )
 ):
@@ -66,6 +61,7 @@ class PackageBuildSpec(
         timeout_in_minutes (int, optional): Fail after this many minutes
         queue (BuildkiteQueue, optional): Which queue to run on
         run_pytest (bool, optional): Whether to run pytest. Enabled by default.
+        run_mypy (bool, optional): Whether to run mypy. Enabled by default.
     """
 
     def __new__(
@@ -83,6 +79,7 @@ class PackageBuildSpec(
         timeout_in_minutes: Optional[int] = None,
         queue: Optional[BuildkiteQueue] = None,
         run_pytest: bool = True,
+        run_mypy: bool = True,
     ):
         return super(PackageBuildSpec, cls).__new__(
             cls,
@@ -99,6 +96,7 @@ class PackageBuildSpec(
             timeout_in_minutes,
             queue,
             run_pytest,
+            run_mypy,
         )
 
     def build_tox_steps(self) -> List[CommandStep]:
@@ -163,13 +161,8 @@ class PackageBuildSpec(
             .build()
         )
 
-        # We expect the tox file to define a mypy testenv. This is run in a dedicated buildkite step.
-        if self.directory not in MYPY_EXCLUDES:
-            steps.append(
-                StepBuilder(f":mypy: {base_label}")
-                .run("pip install -U virtualenv", f"cd {self.directory}", "tox -vv -e mypy")
-                .on_integration_image(SupportedPython.V3_8)
-                .build()
-            )
+        if self.run_mypy:
+            # Toxfile must define a mypy testenv.
+            steps.append(build_mypy_step(self.directory))
 
         return steps
