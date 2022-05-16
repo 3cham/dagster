@@ -1,7 +1,14 @@
 import os
+from glob import glob
 from typing import List
 
-from ..defines import GCP_CREDS_LOCAL_FILE, TOX_MAP, ExamplePythons, SupportedPython
+from ..defines import (
+    DEFAULT_PYTHON_VERSION,
+    GCP_CREDS_LOCAL_FILE,
+    TOX_MAP,
+    ExamplePythons,
+    SupportedPython,
+)
 from ..images.versions import COVERAGE_IMAGE_VERSION
 from ..package_build_spec import PackageBuildSpec
 from ..step_builder import StepBuilder
@@ -23,7 +30,38 @@ GIT_REPO_ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "
 branch_name = safe_getenv("BUILDKITE_BRANCH")
 
 
-def airflow_extra_cmds_fn(version):
+def build_dagster_steps() -> List[CommandStep]:
+    steps = []
+    steps += publish_test_images()
+
+    # Other linters are run in per-package environments because they rely on the dependencies of the
+    # target. `black`, `isort`, and `check-manifest` are run for the whole repo at once.
+    steps += build_repo_wide_isort_steps()
+    steps += build_repo_wide_black_steps()
+    steps += build_repo_wide_check_manifest_steps()
+
+    # "Package" used loosely here to mean roughly "a directory with some python modules". For
+    # instances, a directory of unrelated scripts counts as a package. All packages must have a
+    # toxfile that defines the tests for that package.
+    for m in DAGSTER_PACKAGES_WITH_CUSTOM_TESTS + DAGSTER_PACKAGES_WITH_STANDARD_STEPS:
+        steps += m.build_tox_steps()
+
+    # https://github.com/dagster-io/dagster/issues/2785
+    steps += build_pipenv_smoke_steps()
+    steps += docs_steps()
+    steps += helm_steps()
+    steps += build_sql_schema_check_steps()
+    steps += build_graphql_python_client_backcompat_steps()
+
+    return steps
+
+
+# ########################
+# ##### PACKAGES WITH CUSTOM STEPS
+# ########################
+
+
+def airflow_extra_cmds_fn(version: str) -> List[str]:
     return [
         'export AIRFLOW_HOME="/airflow"',
         "mkdir -p $${AIRFLOW_HOME}",
@@ -513,52 +551,37 @@ DAGSTER_PACKAGES_WITH_CUSTOM_TESTS: List[PackageBuildSpec] = [
 ]
 
 
-def extra_library_tests():
-    """Ensure we test any remaining libraries not explicitly listed above"""
-    library_path = os.path.join(GIT_REPO_ROOT, "python_modules", "libraries")
-    library_packages = [
-        os.path.join("python_modules", "libraries", library) for library in os.listdir(library_path)
-    ]
-
-    dirs = set([pkg.directory for pkg in DAGSTER_PACKAGES_WITH_CUSTOM_TESTS])
-
-    tests = []
-    for library in library_packages:
-        if library not in dirs:
-            tests += ModuleBuildSpec(library).get_tox_build_steps()
-    return tests
+_customized_packages = set([pkg.directory for pkg in DAGSTER_PACKAGES_WITH_CUSTOM_TESTS])
 
 
-def examples_tests():
-    """Auto-discover and test all new examples"""
-
-    skip_examples = [
-        # Skip these folders because they need custom build config
-        "docs_snippets",
-        "airline_demo",
-        "dbt_example",
-        "deploy_docker",
-        "hacker_news",
-        "hacker_news_assets",
-    ]
-
-    examples_root = os.path.join(GIT_REPO_ROOT, "examples")
-
-    examples_packages = [
-        os.path.join("examples", example)
-        for example in os.listdir(examples_root)
-        if example not in skip_examples and os.path.isdir(os.path.join(examples_root, example))
-    ]
-
-    tests = []
-    for example in examples_packages:
-        tests += ModuleBuildSpec(
-            example, upload_coverage=False, supported_pythons=ExamplePythons
-        ).get_tox_build_steps()
-    return tests
+# Find packages under a root subdirectory that are not configured above.
+def _get_uncustomized_pkgs(root):
+    return (
+        set(
+            [
+                os.path.relpath(p, GIT_REPO_ROOT)
+                for p in glob(f"{GIT_REPO_ROOT}/{root}/*")
+                if os.path.exists(f"{p}/tox.ini")
+            ]
+        )
+        - _customized_packages
+    )
 
 
-def pipenv_smoke_tests():
+DAGSTER_PACKAGES_WITH_STANDARD_STEPS = [
+    *[
+        PackageBuildSpec(pkg, upload_coverage=False)
+        for pkg in _get_uncustomized_pkgs("python_modules")
+    ],
+    *[PackageBuildSpec(pkg) for pkg in _get_uncustomized_pkgs("python_modules/libraries")],
+    *[
+        PackageBuildSpec(pkg, upload_coverage=False, supported_pythons=ExamplePythons)
+        for pkg in _get_uncustomized_pkgs("examples")
+    ],
+]
+
+
+def build_pipenv_smoke_steps() -> List[CommandStep]:
     is_release = check_for_release()
     if is_release:
         return []
@@ -580,7 +603,7 @@ def pipenv_smoke_tests():
     ]
 
 
-def coverage_step():
+def build_coverage_step() -> CommandStep:
     return (
         StepBuilder(":coverage:")
         .run(
@@ -611,8 +634,8 @@ def coverage_step():
     )
 
 
-def pylint_steps():
-    base_paths = [".buildkite", "scripts", "docs"]
+def build_pylint_misc_steps() -> List[CommandStep]:
+    base_paths = ["docs"]
     base_paths_ext = ['"%s/**.py"' % p for p in base_paths]
 
     return [
@@ -635,16 +658,7 @@ def pylint_steps():
     ]
 
 
-def isort_steps():
-    return [
-        StepBuilder(":isort:")
-        .run("pip install -e python_modules/dagster[isort]", "make check_isort")
-        .on_integration_image(SupportedPython.V3_7)
-        .build(),
-    ]
-
-
-def black_steps():
+def build_repo_wide_black_steps() -> List[CommandStep]:
     return [
         StepBuilder(":python-black:")
         # See: https://github.com/dagster-io/dagster/issues/1999
@@ -654,7 +668,35 @@ def black_steps():
     ]
 
 
-def schema_checks(version=SupportedPython.V3_8):
+def build_repo_wide_isort_steps() -> List[CommandStep]:
+    return [
+        StepBuilder(":isort:")
+        .run("pip install -e python_modules/dagster[isort]", "make check_isort")
+        .on_integration_image(SupportedPython.V3_7)
+        .build(),
+    ]
+
+
+def build_repo_wide_check_manifest_steps(version=DEFAULT_PYTHON_VERSION) -> List[CommandStep]:
+    published_packages = [
+        "python_modules/dagit",
+        "python_modules/dagster",
+        "python_modules/dagster-graphql",
+        *(
+            os.path.relpath(p, GIT_REPO_ROOT)
+            for p in glob(f"{GIT_REPO_ROOT}/python_modules/libraries/*")
+        ),
+    ]
+
+    commands = [
+        "pip install check-manifest",
+        *(f"check-manifest {library}" for library in published_packages),
+    ]
+
+    return [StepBuilder("check-manifest").on_integration_image(version).run(*commands).build()]
+
+
+def build_sql_schema_check_steps(version=DEFAULT_PYTHON_VERSION) -> List[CommandStep]:
     return [
         StepBuilder("SQL schema checks")
         .on_integration_image(version)
@@ -663,7 +705,9 @@ def schema_checks(version=SupportedPython.V3_8):
     ]
 
 
-def graphql_python_client_backcompat_checks(version=SupportedPython.V3_8):
+def build_graphql_python_client_backcompat_steps(
+    version=DEFAULT_PYTHON_VERSION,
+) -> List[CommandStep]:
     return [
         StepBuilder("Backwards compat checks for the GraphQL Python Client")
         .on_integration_image(version)
@@ -673,48 +717,3 @@ def graphql_python_client_backcompat_checks(version=SupportedPython.V3_8):
         )
         .build()
     ]
-
-
-def manifest_checks(version=SupportedPython.V3_7):
-    library_path = os.path.join(GIT_REPO_ROOT, "python_modules", "libraries")
-    library_packages = [
-        os.path.join("python_modules", "libraries", library) for library in os.listdir(library_path)
-    ]
-
-    commands = ["pip install check-manifest"]
-    commands += [
-        "check-manifest python_modules/dagster",
-        "check-manifest python_modules/dagster-graphql",
-        "check-manifest python_modules/dagit",
-    ]
-    commands += [f"check-manifest {library}" for library in library_packages]
-
-    return [StepBuilder("manifest").on_integration_image(version).run(*commands).build()]
-
-
-def dagster_steps():
-    steps = []
-    steps += publish_test_images()
-
-    # NOTE: these `pylint_steps` only cover misc python code, there are also package-specific pylint
-    # steps
-    steps += pylint_steps()
-    steps += isort_steps()
-    steps += black_steps()
-
-    for m in DAGSTER_PACKAGES_WITH_CUSTOM_TESTS:
-        steps += m.get_tox_build_steps()
-
-    steps += extra_library_tests()
-
-    steps += manifest_checks()
-
-    # https://github.com/dagster-io/dagster/issues/2785
-    steps += pipenv_smoke_tests()
-    steps += docs_steps()
-    steps += examples_tests()
-    steps += helm_steps()
-    steps += schema_checks()
-    steps += graphql_python_client_backcompat_checks()
-
-    return steps

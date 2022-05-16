@@ -1,6 +1,5 @@
 from typing import Dict, List
 
-
 class SupportedPython:
     V3_9 = "3.9.10"
     V3_8 = "3.8.12"
@@ -32,6 +31,8 @@ VERSION_TEST_DIRECTIVES: Dict[str, List[str]] = {
     "test-all": SupportedPythons,
 }
 
+# Used whenever a step runs on just one version.
+DEFAULT_PYTHON_VERSION = SupportedPython.V3_9
 
 # https://github.com/dagster-io/dagster/issues/1662
 DO_COVERAGE = True
