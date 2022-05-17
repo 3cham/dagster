@@ -1,7 +1,7 @@
 import re
 import sys
 from collections import defaultdict, deque
-from typing import TYPE_CHECKING, AbstractSet, Dict, List, NamedTuple
+from typing import TYPE_CHECKING, AbstractSet, Dict, List, NamedTuple, Union
 
 from dagster.core.definitions.dependency import DependencyStructure
 from dagster.core.errors import DagsterExecutionStepNotFoundError, DagsterInvalidSubsetError
@@ -9,6 +9,7 @@ from dagster.utils import check
 
 if TYPE_CHECKING:
     from dagster.core.definitions.job_definition import JobDefinition
+    from dagster.core.definitions.pending_job_definition import PendingJobDefinition
 
 MAX_NUM = sys.maxsize
 
@@ -19,7 +20,7 @@ class OpSelectionData(
         [
             ("op_selection", List[str]),
             ("resolved_op_selection", AbstractSet[str]),
-            ("parent_job_def", "JobDefinition"),
+            ("parent_job_def", Union["JobDefinition", "PendingJobDefinition"]),
         ],
     )
 ):
@@ -34,6 +35,7 @@ class OpSelectionData(
 
     def __new__(cls, op_selection, resolved_op_selection, parent_job_def):
         from dagster.core.definitions.job_definition import JobDefinition
+        from dagster.core.definitions.pending_job_definition import PendingJobDefinition
 
         return super(OpSelectionData, cls).__new__(
             cls,
@@ -41,7 +43,9 @@ class OpSelectionData(
             resolved_op_selection=check.set_param(
                 resolved_op_selection, "resolved_op_selection", str
             ),
-            parent_job_def=check.inst_param(parent_job_def, "parent_job_def", JobDefinition),
+            parent_job_def=check.inst_param(
+                parent_job_def, "parent_job_def", (JobDefinition, PendingJobDefinition)
+            ),
         )
 
 
